@@ -35,7 +35,7 @@ This is a Flask API project that uses SQLAlchemy for database interactions, Flas
 1. **Create a .env file in the root directory with the following content:**
    ```ini
     SECRET_KEY=8ebb8ab2f0fdf0d387fc25c952768b46
-    SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:@localhost/db_name
+    SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:@localhost/accounting_db
     SQLALCHEMY_TRACK_MODIFICATIONS=False
    ```
 
