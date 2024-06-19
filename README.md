@@ -16,8 +16,8 @@ This is a Flask API project that uses SQLAlchemy for database interactions, Flas
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/flask-api-project.git
-   cd
+   git clone git@github.com:ifrit653/sidewinder.git
+   cd sidewinder
    ```
 
 2. **Create and activate a virtual environment**
