@@ -14,6 +14,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
     with app.app_context():
         from . import views, models 
         # db.create_all()
