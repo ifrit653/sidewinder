@@ -8,7 +8,7 @@ class User(db.Model):
     lastname = db.Column(db.String(50), nullable = False) 
     role = db.Column(db.String(50))
     email = db.Column(db.String(100), nullable = False, unique = True)
-    password = db.Column(db.String(64), nullable = False)
+    password_hash = db.Column(db.String(64), nullable = False)
 
     def __init__(self, firstname, lastname, password, email, role):
         self.firstname = firstname
@@ -16,6 +16,8 @@ class User(db.Model):
         self.email = email
         self.password_hash = generate_password_hash(password)
         self.role = role
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     def __repr__(self):

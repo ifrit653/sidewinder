@@ -1,11 +1,15 @@
-from flask import Blueprint, jsonify, current_app, request, session as app
-from .models import User, Vouchers, db
+from flask import Blueprint, jsonify, request, session
 from .schemas import VoucherSchema
 from werkzeug.security import generate_password_hash, check_password_hash
-
-auth = Blueprint('auth', __name__)
-
-@auth.route('/api/register', methods=['POST'])
+from app import db
+from .models import User, Vouchers
+views = Blueprint('views', __name__)
+@views.route('/', methods=['GET'])
+def main():
+    return jsonify({
+        'message' : 'test'
+    })
+@views.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
     firstname = data.get('firstname')
@@ -19,14 +23,14 @@ def register():
             'message' : 'Missing parameters'
         },), 400 
     hashed_password = generate_password_hash(password)
-    new_user = User(firstname=firstname, lastname=lastname, email=email, password_hash=hashed_password, role=role)
+    new_user = User(firstname=firstname, lastname=lastname, email=email, password=hashed_password, role=role)
     db.session.add(new_user)
     db.session.commit()
     return jsonify({
         'message' : 'User created successfully'
     }), 201
 
-@auth.route('/api/login', methods=['POST'])
+@views.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email')
@@ -48,19 +52,19 @@ def login():
         'message': 'Logged in successfully'
     }), 200
 
-@auth.route('api/logout', methods=['GET'])
+@views.route('/api/logout', methods=['GET'])
 def logout():
     session.pop('user_id', None)
     return jsonify({
         'message': 'logged out successfully'
     }), 200
 
-@auth.route('/users', methods =['GET'])
+@views.route('/users', methods =['GET'])
 def get_users():
     users = User.query.all()
     return jsonify([user.__dict__ for user in users])
 
-@auth.route('/api/vouchers', methods =['GET'])
+@views.route('/api/vouchers', methods =['GET'])
 def get_vouchers():
     vouchers = Vouchers.query.all()
     voucher_schema = VoucherSchema(many=True)
