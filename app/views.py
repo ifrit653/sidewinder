@@ -6,8 +6,12 @@ from .models import User, Vouchers
 views = Blueprint('views', __name__)
 @views.route('/', methods=['GET'])
 def main():
+    plain_password = "password"
+    hashed = generate_password_hash(plain_password)
+    checking = check_password_hash(hashed, plain_password)
+    print(checking)
     return jsonify({
-        'message' : 'test'
+        'message' : 'hello! it work!!! congrats'
     })
 @views.route('/api/register', methods=['POST'])
 def register():
@@ -21,8 +25,11 @@ def register():
     if not firstname or not lastname or not password or not email:
         return jsonify({
             'message' : 'Missing parameters'
-        },), 400 
-    hashed_password = generate_password_hash(password)
+        },), 400
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({'message': 'Email already taken'}), 400 
+    hashed_password = generate_password_hash(password,salt_length=16)
     new_user = User(firstname=firstname, lastname=lastname, email=email, password=hashed_password, role=role)
     db.session.add(new_user)
     db.session.commit()
@@ -42,9 +49,13 @@ def login():
         }), 400
     user = User.query.filter_by(email=email).first()
 
-    if not user or not check_password_hash(user.password_hash, password):
+    if not user:
         return jsonify({
-            'message' : 'Invalid credentials'
+            'message' : 'Invalid email'
+        }), 401
+    if not user.check_password(password):
+        return jsonify({
+            'message': 'wrong password'
         }), 401
     session[user.id] = user.id 
 
