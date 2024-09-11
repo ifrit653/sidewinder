@@ -35,14 +35,14 @@ def login():
     data = request.get_json()
     email = data.get('email')
     password= data.get('password')
-
     if not email or not password:
         return jsonify({
             'message': 'Missing email or password'
         }), 400
     user = User.query.filter_by(email=email).first()
-
-    if not user or not check_password_hash(user.password_hash, password):
+    print(user.email)
+    print(user.firstname)
+    if not user or not check_password_hash(user.password, password):
         return jsonify({
             'message' : 'Invalid credentials'
         }), 401
