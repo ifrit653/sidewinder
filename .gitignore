@@ -86,7 +86,7 @@ app/media/*
 *.log
 
 # Local dev environment configuration
-config.py
+# config.py
 
 # Coverage reports
 htmlcov/

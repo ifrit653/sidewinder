@@ -3,15 +3,12 @@ from .schemas import VoucherSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from .models import User, Vouchers
+from flask_jwt_extended import create_access_token
 views = Blueprint('views', __name__)
 @views.route('/', methods=['GET'])
 def main():
-    plain_password = "password"
-    hashed = generate_password_hash(plain_password)
-    checking = check_password_hash(hashed, plain_password)
-    print(checking)
     return jsonify({
-        'message' : 'hello! it work!!! congrats'
+        'message' : 'test'
     })
 @views.route('/api/register', methods=['POST'])
 def register():
@@ -25,12 +22,9 @@ def register():
     if not firstname or not lastname or not password or not email:
         return jsonify({
             'message' : 'Missing parameters'
-        },), 400
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({'message': 'Email already taken'}), 400 
-    hashed_password = generate_password_hash(password,salt_length=16)
-    new_user = User(firstname=firstname, lastname=lastname, email=email, password=hashed_password, role=role)
+        },), 400 
+    # hashed_password = generate_password_hash(password)
+    new_user = User(firstname=firstname, lastname=lastname, email=email, password=password, role=role)
     db.session.add(new_user)
     db.session.commit()
     return jsonify({
@@ -47,17 +41,12 @@ def login():
             'message': 'Missing email or password'
         }), 400
     user = User.query.filter_by(email=email).first()
-    print(user.email)
-    print(user.firstname)
     if not user or not check_password_hash(user.password, password):
         return jsonify({
-            'message': 'wrong password'
+            'message' : 'Invalid credentials'
         }), 401
-    session[user.id] = user.id 
-
-    return jsonify({
-        'message': 'Logged in successfully'
-    }), 200
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token), 200
 
 @views.route('/api/logout', methods=['GET'])
 def logout():
