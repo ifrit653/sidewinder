@@ -38,9 +38,9 @@ class Vouchers(db.Model):
     id = db.Column(db.Integer, primary_key= True)
     debit_amount = db.Column(db.Float, nullable = False)
     credit_amount = db.Column(db.Float, nullable = False)
-    debit_code = db.Column(db.String(11),db.ForeignKey(Code_debit.code_debit), nullable = False)
+    debit_code = db.Column(db.String(11), nullable = False)
     credit_code = db.Column(db.String(11), nullable = False)
-    label = db.Column(db.String(255), nullable = False)
+    label = db.Column(db.Text, nullable = False)
     user_id= db.Column(db.Integer, db.ForeignKey(User.id))
 
 
