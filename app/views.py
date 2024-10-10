@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-# from .schemas import VoucherSchema
+from .schemas import VoucherSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from .models import User, Vouchers
@@ -70,10 +70,13 @@ def set_vouchers():
     debit_code = data.get("debit_code")
     credit_code = data.get("credit_code")
     label = data.get('label')
-    user_id = None
     current_user_id = get_jwt_identity()
-    current_user = User.query.get(current_user_id)
-    user_id = current_user.id
+    # current_user = User.query.get(current_user_id)
+    user_id = current_user_id
+    if not debit_amount or not credit_amount or not debit_code or not credit_code or not label or not user_id:
+        return jsonify({
+            'message' : 'Missing parameters'
+        },), 400 
     new_voucher = Vouchers(debit_amount=debit_amount, credit_amount=credit_amount, debit_code=debit_code, credit_code=credit_code, label=label, user_id=user_id)
     db.session.add(new_voucher)
     db.session.commit()
@@ -91,8 +94,11 @@ def get_vouchers():
     pagination = Vouchers.query.pagination(page=page, per_page = per_page, error_out = False)
     vouchers = pagination.items
 
+    serialized_vouchers = VoucherSchema(many=True).dump(vouchers)
+
     response = {
-        'voucher': [{id: voucher.id, 'debit_amount': voucher.debit_amount, 'credit_amount': voucher.credit_amount, 'debit_code': voucher.debit_code, 'credit_code': voucher.credit_code, 'label': voucher.label}],
+        # 'vouchers': [{id: voucher.id, 'debit_amount': voucher.debit_amount, 'credit_amount': voucher.credit_amount, 'debit_code': voucher.debit_code, 'credit_code': voucher.credit_code, 'label': voucher.label}],
+        'vouchers': serialized_vouchers,
         'total': pagination.total, 
         'page': pagination.page,
         'pages': pagination.pages,
