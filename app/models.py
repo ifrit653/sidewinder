@@ -1,5 +1,6 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime 
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -55,5 +56,16 @@ class Vouchers(db.Model):
         def __repr__(self):
             return f'<Voucher {self.label}>'
         
+class BlacklistedToken(db.Model):
+    __tablename__ = 'blacklisted_tokens'
 
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(255), nullable=False, unique=True)  # JWT's unique identifier (jti)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __init__(self, jti):
+        self.jti = jti
+
+    def __repr__(self):
+        return f'<BlacklistedToken {self.jti}>'
 

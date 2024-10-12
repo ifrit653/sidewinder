@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request
 from .schemas import VoucherSchema
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash
 from app import db
-from .models import User, Vouchers
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from .models import User, Vouchers, BlacklistedToken
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, create_refresh_token, get_jwt
 views = Blueprint('views', __name__)
 @views.route('/', methods=['GET'])
 def main():
@@ -46,8 +46,33 @@ def login():
             'message' : 'Invalid credentials'
         }), 401
     access_token = create_access_token(identity=user.id)
-    return jsonify(access_token=access_token), 200
+    refresh_token = create_refresh_token(identity=user.id)
+    return jsonify({
+        'message': 'Logged in successfully', 
+        'access_token':access_token,
+        'refresh_token': refresh_token
+        }), 200
 
+
+@views.route('/api/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+
+    refresh_token = request.cookies.get('refresh_token')
+    if not refresh_token:
+        return jsonify({'message': 'Missing redresh token'}), 401
+    
+    try:
+        current_user = get_jwt_identity()
+        access_token = create_access_token(identity=current_user)
+
+        return jsonify({
+            'access_token': access_token,
+            'message': 'Token refresh successfully'
+        })
+    except Exception as e:
+        return jsonify({'message': f"error: {e}"}), 401
+    
 ''' this logout endpoint use session '''
 # @views.route('/api/logout', methods=['GET'])
 # def logout():
@@ -55,6 +80,17 @@ def login():
 #     return jsonify({
 #         'message': 'logged out successfully'
 #     }), 200
+
+@views.route('/api/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    jti = get_jwt()["jti"]  # Get the unique identifier for the token
+    blacklisted_token = BlacklistedToken(jti=jti)
+    
+    db.session.add(blacklisted_token)
+    db.session.commit()
+
+    return jsonify({"msg": "Token has been blacklisted"}), 200
 
 @views.route('/users', methods =['GET'])
 def get_users():
