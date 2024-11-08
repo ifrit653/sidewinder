@@ -1,6 +1,7 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime 
+from datetime import datetime, timezone
+from sqlalchemy import text
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -43,6 +44,11 @@ class Vouchers(db.Model):
     credit_code = db.Column(db.String(11), nullable = False)
     label = db.Column(db.Text, nullable = False)
     user_id= db.Column(db.Integer, db.ForeignKey(User.id))
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
 
     def __init__(self, debit_amount, credit_amount, debit_code, credit_code, label, user_id):
@@ -61,7 +67,7 @@ class BlacklistedToken(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     jti = db.Column(db.String(255), nullable=False, unique=True)  # JWT's unique identifier (jti)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     def __init__(self, jti):
         self.jti = jti

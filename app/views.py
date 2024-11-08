@@ -24,9 +24,13 @@ def register():
             'message' : 'Missing parameters'
         },), 400 
     # hashed_password = generate_password_hash(password)
-    new_user = User(firstname=firstname, lastname=lastname, email=email, password=password, role=role)
-    db.session.add(new_user)
-    db.session.commit()
+    try:
+        new_user = User(firstname=firstname, lastname=lastname, email=email, password=password, role=role)
+        db.session.add(new_user)
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'message': 'error during the registraion', 'error': str(e)}), 500
+    
     return jsonify({
         'message' : 'User created successfully'
     }), 201
@@ -73,14 +77,6 @@ def refresh():
     except Exception as e:
         return jsonify({'message': f"error: {e}"}), 401
     
-''' this logout endpoint use session '''
-# @views.route('/api/logout', methods=['GET'])
-# def logout():
-#     session.pop('user_id', None)
-#     return jsonify({
-#         'message': 'logged out successfully'
-#     }), 200
-
 @views.route('/api/logout', methods=['POST'])
 @jwt_required()
 def logout():
@@ -107,16 +103,25 @@ def set_vouchers():
     credit_code = data.get("credit_code")
     label = data.get('label')
     current_user_id = get_jwt_identity()
-    # current_user = User.query.get(current_user_id)
+    
+    # TODO: implement the model to predict the credit code 
+
     user_id = current_user_id
     if not debit_amount or not credit_amount or not debit_code or not credit_code or not label or not user_id:
         return jsonify({
             'message' : 'Missing parameters'
         },), 400 
-    new_voucher = Vouchers(debit_amount=debit_amount, credit_amount=credit_amount, debit_code=debit_code, credit_code=credit_code, label=label, user_id=user_id)
-    db.session.add(new_voucher)
-    db.session.commit()
-
+    try: 
+        debit_amount = float(debit_amount)
+        credit_amount = float(credit_amount)
+    except ValueError:
+        return jsonify({'message': 'Amount must be positive numbers'}), 400
+    try:
+        new_voucher = Vouchers(debit_amount=debit_amount, credit_amount=credit_amount, debit_code=debit_code, credit_code=credit_code, label=label, user_id=user_id)
+        db.session.add(new_voucher)
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'message': 'Failed add voucher', 'error': str(e)}), 500
     return jsonify({
         'message' : 'voucher added successfully'
     }), 201
@@ -133,7 +138,6 @@ def get_vouchers():
     serialized_vouchers = VoucherSchema(many=True).dump(vouchers)
 
     response = {
-        # 'vouchers': [{id: voucher.id, 'debit_amount': voucher.debit_amount, 'credit_amount': voucher.credit_amount, 'debit_code': voucher.debit_code, 'credit_code': voucher.credit_code, 'label': voucher.label}],
         'vouchers': serialized_vouchers,
         'total': pagination.total, 
         'page': pagination.page,
@@ -143,7 +147,3 @@ def get_vouchers():
         'has_prev': pagination.has_prev,
     }
     return jsonify(response)
-    # vouchers = Vouchers.query.all()
-    # voucher_schema = VoucherSchema(many=True)
-    # vouchers_data = voucher_schema.dump(vouchers)
-    # return jsonify(vouchers_data)
