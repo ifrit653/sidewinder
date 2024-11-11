@@ -68,7 +68,7 @@ venv.bak/
 .DS_Store
 
 # MySQL database files
-*.sql
+# *.sql
 
 # Environment variables
 .env
